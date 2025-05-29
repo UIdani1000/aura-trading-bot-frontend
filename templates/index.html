@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Trading Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #e6edf3;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #161b22;
+            border-right: 1px solid #30363d;
+        }
+        .content {
+            margin-left: 250px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #c9d1d9;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #21262d;
+            color: #e6edf3;
+        }
+        .nav-item.active {
+            background-color: #21262d;
+            color: #58a6ff;
+            border-left: 4px solid #58a6ff;
+            padding-left: 16px;
+        }
+        .nav-item.active i {
+            color: #58a6ff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .input-group input, .input-group select {
+            background: none;
+            border: none;
+            outline: none;
+            color: #e6edf3;
+            flex-grow: 1;
+        }
+        .input-group input::placeholder {
+            color: #8b949e;
+        }
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column-reverse; /* New notifications appear at the bottom */
+        }
+        .notification {
+            background-color: #21262d;
+            color: #e6edf3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInOut 7s forwards; /* Increased duration */
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+        .ai-message {
+            background-color: #1f2a37; /* Slightly darker blue-gray for AI */
+            border-radius: 12px 12px 12px 2px;
+            padding: 12px 18px;
+            max-width: 80%;
+            align-self: flex-start;
+        }
+        .user-message {
+            background-color: #3f51b5; /* A distinct blue for user */
+            border-radius: 12px 12px 2px 12px;
+            padding: 12px 18px;
+            max-width: 80%;
+            align-self: flex-end;
+            color: white;
+        }
+        /* Custom checkbox styling */
+        .checkbox-group input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #58a6ff; /* Blue border */
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            background-color: #161b22;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .checkbox-group input[type="checkbox"]:checked {
+            background-color: #58a6ff; /* Blue background when checked */
+            border-color: #58a6ff;
+        }
+
+        .checkbox-group input[type="checkbox"]:checked::before {
+            content: '\2713'; /* Checkmark character */
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: #0d1117; /* Dark color for checkmark */
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #c9d1d9;
+        }
+
+        .checkbox-group label span {
+            margin-left: 8px;
+        }
+
+        /* Custom radio button styling */
+        .radio-group input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #58a6ff; /* Blue border */
+            border-radius: 50%; /* Make it round */
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            background-color: #161b22;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .radio-group input[type="radio"]:checked {
+            background-color: #58a6ff; /* Blue background when checked */
+            border-color: #58a6ff;
+        }
+
+        .radio-group input[type="radio"]:checked::before {
+            content: ''; /* No checkmark for radio, just fill */
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px; /* Inner circle size */
+            height: 8px;
+            border-radius: 50%;
+            background-color: #0d1117; /* Dark color for inner circle */
+            transform: translate(-50%, -50%);
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #c9d1d9;
+        }
+
+        .radio-group label span {
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+    <div class="sidebar fixed h-full flex flex-col justify-between py-6">
+        <div>
+            <div class="flex items-center justify-center mb-10 px-6">
+                <i data-lucide="gem" class="w-8 h-8 text-purple-400 mr-2"></i>
+                <span class="text-2xl font-bold text-white">Aura</span>
+            </div>
+            <nav>
+                <ul>
+                    <li>
+                        <a href="#" class="nav-item active" data-tab="dashboard">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-tab="ai-chat">
+                            <i data-lucide="message-square" class="w-5 h-5 mr-3"></i> AI Chat
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-tab="analysis">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 mr-3"></i> Analysis
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-tab="price-alerts">
+                            <i data-lucide="bell" class="w-5 h-5 mr-3"></i> Price Alerts
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-tab="settings">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3"></i> Settings
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="px-6 text-sm text-gray-500">
+            &copy; 2023 Aura. All rights reserved.
+        </div>
+    </div>
+
+    <div class="content flex-1 p-8">
+        <h1 id="welcomeMessage" class="text-3xl font-bold mb-8">Hello, Trader! Welcome to Aura.</h1>
+
+        <div id="dashboard" class="tab-content active">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-gray-900 rounded-xl shadow-lg p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold text-gray-200">Current Price</h2>
+                            <select id="selectedPair" class="bg-gray-700 text-white rounded-lg p-2 text-sm">
+                                <option value="BTC/USD">BTC/USD</option>
+                                <option value="ETH/USD">ETH/USD</option>
+                                <option value="SOL/USD">SOL/USD</option>
+                                <option value="XRP/USD">XRP/USD</option>
+                                <option value="ADA/USD">ADA/USD</option>
+                                <option value="DOGE/USD">DOGE/USD</option>
+                                <option value="RVN/USD">RVN/USD</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end mb-2">
+                            <p id="currentPrice" class="text-6xl font-bold text-white transition-colors duration-200">--.--</p>
+                            <span id="priceChange" class="text-emerald-400 text-xl ml-3 flex items-center">
+                                <i id="priceArrow" data-lucide="minus" class="w-5 h-5 mr-1"></i>
+                                <span id="pricePercent">0.00%</span>
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-500">Updated: <span id="lastUpdated">--:--:--</span></p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 rounded-xl shadow-lg p-6 lg:col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-4">Market Overview</h2>
+                    <div id="marketOverviewContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        </div>
+                </div>
+
+                <div class="bg-gray-900 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-4">Recent AI Analysis</h2>
+                    <div id="recentAnalysisDisplay" class="text-gray-400 text-sm">
+                        No recent analysis. Run one in the 'Analysis' tab.
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 rounded-xl shadow-lg p-6 lg:col-span-2">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-4">Active Price Alerts</h2>
+                    <div id="activeAlertsDisplay" class="text-gray-400 text-sm">
+                        No active price alerts. Set one up in the 'Price Alerts' tab.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ai-chat" class="tab-content">
+            <div class="bg-gray-900 rounded-xl shadow-lg p-6 flex flex-col h-[70vh]">
+                <div id="chatWindow" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                    </div>
+                <div class="mt-6 flex items-center gap-4">
+                    <div class="input-group flex-1">
+                        <input type="text" id="chatInput" placeholder="Type your message or ask Aura..." class="flex-1 p-2 bg-transparent text-white focus:outline-none">
+                        <button id="voiceInputBtn" class="p-2 text-gray-400 hover:text-white rounded-full transition-colors">
+                            <i data-lucide="mic" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                    <button id="sendMessageBtn" class="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg transition-colors flex items-center justify-center">
+                        <i data-lucide="send" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="analysis" class="tab-content">
+            <div class="bg-gray-900 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-200 mb-6">ANALYSIS CONFIGURATION</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label for="analysisPair" class="block text-gray-400 text-sm font-bold mb-2">Currency Pair</label>
+                        <select id="analysisPair" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white relative z-10">
+                            <option value="BTC/USD">Bitcoin (BTC/USD)</option>
+                            <option value="ETH/USD">Ethereum (ETH/USD)</option>
+                            <option value="SOL/USD">Solana (SOL/USD)</option>
+                            <option value="XRP/USD">Ripple (XRP/USD)</option>
+                            <option value="ADA/USD">Cardano (ADA/USD)</option>
+                            <option value="DOGE/USD">Dogecoin (DOGE/USD)</option>
+                            <option value="RVN/USD">Ravencoin (RVN/USD)</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">Timeframes (Select Multiple)</label>
+                        <div id="analysisTimeframes" class="grid grid-cols-2 sm:grid-cols-4 gap-3 checkbox-group">
+                            <label><input type="checkbox" name="timeframe" value="M1"><span>M1</span></label>
+                            <label><input type="checkbox" name="timeframe" value="M5"><span>M5</span></label>
+                            <label><input type="checkbox" name="timeframe" value="M15"><span>M15</span></label>
+                            <label><input type="checkbox" name="timeframe" value="M30"><span>M30</span></label>
+                            <label><input type="checkbox" name="timeframe" value="H1"><span>H1</span></label>
+                            <label><input type="checkbox" name="timeframe" value="H4"><span>H4</span></label>
+                            <label><input type="checkbox" name="timeframe" value="H6"><span>H6</span></label>
+                            <label><input type="checkbox" name="timeframe" value="D1"><span>D1</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="col-span-1">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">Technical Indicators</label>
+                        <div id="analysisIndicators" class="grid grid-cols-2 gap-3 checkbox-group">
+                            <label><input type="checkbox" name="indicator" value="RSI"><span>RSI</span></label>
+                            <label><input type="checkbox" name="indicator" value="Stochastic"><span>Stochastic</span></label>
+                            <label><input type="checkbox" name="indicator" value="MACD"><span>MACD</span></label>
+                            <label><input type="checkbox" name="indicator" value="Moving Averages"><span>Moving Averages</span></label>
+                            <label><input type="checkbox" name="indicator" value="Bollinger Bands"><span>Bollinger Bands</span></label>
+                            <label><input type="checkbox" name="indicator" value="Volume"><span>Volume</span></label>
+                            <label><input type="checkbox" name="indicator" value="Momentum"><span>Momentum</span></label>
+                        </div>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-gray-400 text-sm font-bold mb-2">Trade Type</label>
+                        <div id="tradeType" class="flex gap-4 radio-group">
+                            <label><input type="radio" name="trade_type" value="Scalp" class="mr-2"><span>Scalp</span></label>
+                            <label><input type="radio" name="trade_type" value="Day Trade" class="mr-2"><span>Day Trade</span></label>
+                            <label><input type="radio" name="trade_type" value="Long Hold" class="mr-2"><span>Long Hold</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label for="balanceRange" class="block text-gray-400 text-sm font-bold mb-2">Balance Range ($)</label>
+                        <select id="balanceRange" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white relative z-10">
+                            <option value="< $1000">Less than $1000</option>
+                            <option value="$1000-5000">$1000 - $5000</option>
+                            <option value="$5001-10000">$5001 - $10000</option>
+                            <option value="$10001-50000">$10001 - $50000</option>
+                            <option value="$50001+">More than $50000</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="leverage" class="block text-gray-400 text-sm font-bold mb-2">$ Margin/Leverage</label>
+                        <select id="leverage" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white relative z-10">
+                            <option value="1x">1x</option>
+                            <option value="5x">5x</option>
+                            <option value="10x">10x</option>
+                            <option value="25x">25x</option>
+                            <option value="50x">50x</option>
+                            <option value="100x">100x</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="runAnalysisBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Run ORSCR Analysis
+                </button>
+
+                <div id="analysisResult" class="mt-8 p-6 bg-gray-800/50 rounded-lg hidden">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-200">Analysis Result for <span id="resultPair"></span> (<span id="resultTimeframe"></span>)</h3>
+                    <div class="flex items-center gap-4 mb-4">
+                        <span id="signalText" class="text-3xl font-bold"></span>
+                        <span id="confidenceText" class="text-lg text-gray-400"></span>
+                    </div>
+                    <div id="analysisDetails" class="text-gray-300 text-sm">
+                        </div>
+                    <div class="grid grid-cols-2 gap-4 text-gray-300 mt-4">
+                        <div>Entry: <span id="entryPrice" class="font-semibold"></span></div>
+                        <div>Take Profit 1: <span id="tp1" class="font-semibold"></span></div>
+                        <div>Stop Loss: <span id="sl" class="font-semibold"></span></div>
+                        <div>Take Profit 2: <span id="tp2" class="font-semibold"></span></div>
+                        <div>Risk:Reward: <span id="rrRatio" class="font-semibold"></span></div>
+                        <div>Take Profit 3: <span id="tp3" class="font-semibold"></span></div>
+                        <div>Leverage: <span id="displayLeverage" class="font-semibold"></span></div>
+                    </div>
+                    <button id="chatAboutAnalysisBtn" class="mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        Chat About This Analysis
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="price-alerts" class="tab-content">
+            <div class="bg-gray-900 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-200 mb-6">Manage Price Alerts</h2>
+                <button id="addAlertBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-6">
+                    Add New Alert
+                </button>
+                <div id="alertsList" class="space-y-4">
+                    <p class="text-gray-400" id="noAlertsMessage">No price alerts set. Click "Add New Alert" to create one.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings" class="tab-content">
+            <div class="bg-gray-900 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-200 mb-6">Settings</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label for="userNameInput" class="block text-gray-400 text-sm font-bold mb-2">Your Name</label>
+                        <input type="text" id="userNameInput" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white" placeholder="Enter your name">
+                    </div>
+                    <div>
+                        <label for="aiNameInput" class="block text-gray-400 text-sm font-bold mb-2">AI Assistant Name</label>
+                        <input type="text" id="aiNameInput" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white" placeholder="Enter AI's name">
+                    </div>
+                    <div>
+                        <label for="volumeControl" class="block text-gray-400 text-sm font-bold mb-2">Volume</label>
+                        <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <span id="volumeValue" class="text-gray-400 text-sm">50%</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <label for="muteAuraVoiceCheckbox">
+                            <input type="checkbox" id="muteAuraVoiceCheckbox">
+                            <span>Mute Aura's Voice</span>
+                        </label>
+                    </div>
+                </div>
+                <button id="saveSettingsBtn" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <div id="addAlertModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-gray-900 rounded-xl p-8 w-full max-w-md shadow-lg">
+            <h2 class="text-2xl font-bold text-white mb-6">Set New Price Alert</h2>
+            <div class="mb-4">
+                <label for="modalAlertPair" class="block text-gray-400 text-sm font-bold mb-2">Crypto Pair</label>
+                <select id="modalAlertPair" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white">
+                    <option value="BTC/USD">BTC/USD</option>
+                    <option value="ETH/USD">ETH/USD</option>
+                    <option value="SOL/USD">SOL/USD</option>
+                    <option value="XRP/USD">XRP/USD</option>
+                    <option value="ADA/USD">ADA/USD</option>
+                    <option value="DOGE/USD">DOGE/USD</option>
+                    <option value="RVN/USD">RVN/USD</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="modalAlertCondition" class="block text-gray-400 text-sm font-bold mb-2">Condition</label>
+                <select id="modalAlertCondition" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white">
+                    <option value="above">Price is Above</option>
+                    <option value="below">Price is Below</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label for="modalAlertPrice" class="block text-gray-400 text-sm font-bold mb-2">Target Price</label>
+                <input type="number" id="modalAlertPrice" step="0.01" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white" placeholder="e.g., 70000.00">
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="cancelAlertBtn" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">Cancel</button>
+                <button id="saveAlertBtn" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">Set Alert</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Global State Variables
+        let userName = "Trader";
+        let aiName = "Aura";
+        let selectedPair = "BTC/USD";
+        let selectedTimeframe = "H1"; // This will become an array of selected timeframes
+        let currentPrice = 0; // Initialize to 0
+        let priceChange = 0.00;
+        let priceChangePercent = 0.00;
+        let isListening = false; // For voice input
+        let cachedMarketData = null; // To store the last fetched market data for alerts
+        let isAuraMuted = false; // Global flag for AI voice mute/unmute
+
+        let priceAlerts = [];
+        let messages = []; // This will now store actual chat history
+        let analysisResults = []; // Store past analysis results
+        let alertNotifications = []; // Store active notifications
+
+        // Sound Management
+        const sounds = {
+            click: new Audio('./static/sounds/click.mp3'),
+            notification: new Audio('./static/sounds/notification.mp3'),
+            aiResponse: new Audio('./static/sounds/ai_response.mp3'),
+            analysisComplete: new Audio('./static/sounds/analysis_complete.mp3'),
+            error: new Audio('./static/sounds/error.mp3'),
+            listening: new Audio('./static/sounds/listening.mp3'),
+            stopListening: new Audio('./static/sounds/stop_listening.mp3')
+        };
+
+        function playSound(name) {
+            const volume = parseFloat(localStorage.getItem('volume')) || 0.5;
+            if (sounds[name]) {
+                sounds[name].volume = volume;
+                sounds[name].play().catch(e => console.warn("Audio play failed:", e)); // Catch and ignore play errors
+            }
+        }
+
+        // UI Navigation
+        function showTab(tabId) {
+            console.log("Attempting to show tab:", tabId); // DEBUG LOG
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                item.style.borderLeft = 'none'; // Reset border
+                item.style.paddingLeft = '20px'; // Reset padding
+                const icon = item.querySelector('i');
+                if (icon) icon.style.color = '#c9d1d9'; // Reset icon color
+            });
+
+            const activeNavItem = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+            if (activeNavItem) {
+                activeNavItem.classList.add('active');
+                activeNavItem.style.borderLeft = '4px solid #58a6ff';
+                activeNavItem.style.paddingLeft = '16px';
+                const icon = activeNavItem.querySelector('i');
+                if (icon) icon.style.color = '#58a6ff';
+            }
+            console.log("Active nav item after click:", document.querySelector('.nav-item.active')?.dataset.tab); // DEBUG LOG
+            playSound('click');
+        }
+
+        // Dashboard Functionality
+        async function updatePrice() { // <--- Make it async
+            console.log("updatePrice() called."); // DEBUG LOG
+            const priceElement = document.getElementById('currentPrice');
+            const changeElement = document.getElementById('priceChange');
+            const percentElement = document.getElementById('pricePercent');
+            const arrowElement = document.getElementById('priceArrow');
+            const lastUpdatedElement = document.getElementById('lastUpdated');
+            const selectedPairElement = document.getElementById('selectedPair'); // Get the selected pair dropdown
+
+            if (!selectedPairElement) { // DEBUG LOG
+                console.error("Error: selectedPair dropdown element not found!");
+                return;
+            }
+
+            // Update selectedPair from the dropdown's current value
+            selectedPair = selectedPairElement.value;
+            console.log("Current selectedPair before fetch:", selectedPair); // DEBUG LOG
+            console.log("Selected pair dropdown value:", selectedPairElement.value); // DEBUG LOG
+
+            try {
+                // Fetch all market prices from your backend
+                const response = await fetch('http://192.168.5.11:5000/all_market_prices'); // <--- Backend URL
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const allMarketData = await response.json();
+                console.log("Fetched allMarketData:", allMarketData); // DEBUG LOG
+                cachedMarketData = allMarketData; // Store for alert checking
+
+                const now = new Date();
+                lastUpdatedElement.textContent = now.toLocaleTimeString();
+
+                // Update the main current price display based on the selectedPair
+                // Note: The backend returns keys like "BTC/USD" now, as per the CoinGecko mapping.
+                const dataForSelectedPair = allMarketData[selectedPair];
+
+                if (dataForSelectedPair) {
+                    console.log("Data found for selectedPair:", selectedPair, dataForSelectedPair); // DEBUG LOG
+                    currentPrice = dataForSelectedPair.price;
+                    priceChange = dataForSelectedPair.change;
+                    priceChangePercent = dataForSelectedPair.percent_change;
+
+                    // Update main price display
+                    priceElement.textContent = currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
+                    if (priceChange > 0) {
+                        changeElement.className = 'text-emerald-400 text-xl ml-3 flex items-center';
+                        arrowElement.setAttribute('data-lucide', 'arrow-up-right');
+                    } else if (priceChange < 0) {
+                        changeElement.className = 'text-red-400 text-xl ml-3 flex items-center';
+                        arrowElement.setAttribute('data-lucide', 'arrow-down-right');
+                    } else {
+                        changeElement.className = 'text-gray-400 text-xl ml-3 flex items-center';
+                        arrowElement.setAttribute('data-lucide', 'minus');
+                    }
+                    percentElement.textContent = `${priceChangePercent.toFixed(2)}%`;
+
+                    // Update Market Overview with actual data
+                    populateMarketOverview(allMarketData);
+
+                } else {
+                    console.warn(`Data for ${selectedPair} not found in backend response.`); // DEBUG LOG
+                    priceElement.textContent = '--.--';
+                    changeElement.className = 'text-gray-400 text-xl ml-3 flex items-center';
+                    arrowElement.setAttribute('data-lucide', 'minus');
+                    percentElement.textContent = '0.00%';
+                }
+
+            } catch (error) {
+                console.error("Error fetching market prices:", error); // DEBUG LOG
+                priceElement.textContent = 'API Error';
+                changeElement.className = 'text-gray-400 text-xl ml-3 flex items-center';
+                arrowElement.setAttribute('data-lucide', 'alert-triangle');
+                percentElement.textContent = 'Error';
+                playSound('error');
+            } finally {
+                lucide.createIcons(); // Re-render icons regardless of success/failure
+            }
+
+            // Check price alerts (now using the fetched currentPrice)
+            priceAlerts.forEach(alert => {
+                // Make sure the alert's pair matches the fetched data's pair
+                const currentPriceForAlert = (cachedMarketData && cachedMarketData[alert.pair]) ? cachedMarketData[alert.pair].price : null;
+
+                if (currentPriceForAlert !== null && !alert.triggered) {
+                    const target = alert.price;
+
+                    if ((alert.condition === 'above' && currentPriceForAlert >= target) ||
+                        (alert.condition === 'below' && currentPriceForAlert <= target)) {
+                        alert.triggered = true; // Mark as triggered
+                        showNotification(`Alert! ${alert.pair} reached target price: ${target}!`, 'Alert!', target); // Use 'Alert!' type for specific styling
+                        playSound('notification');
+
+                        // Optionally, remove the alert after it triggers
+                        // priceAlerts = priceAlerts.filter(a => a.id !== alert.id);
+                        // populatePriceAlerts(); // Re-populate UI
+                        // saveAlerts(); // Save updated alerts to local storage
+                    }
+                }
+            });
+        }
+
+        // Mock market overview data (will be supplemented by real data)
+        function populateMarketOverview(allMarketData) { // <--- Renamed parameter for clarity
+            const container = document.getElementById('marketOverviewContainer');
+            const marketItems = [];
+
+            // Dynamically add all pairs from allMarketData
+            for (const pairKey in allMarketData) {
+                const data = allMarketData[pairKey];
+                if (data.price !== 0.0) { // Only add if price is not zero (i.e., successfully fetched)
+                    marketItems.push({
+                        name: pairKey, // Use the actual pair key from backend
+                        value: `$${data.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                        trend: data.change > 0 ? "up" : (data.change < 0 ? "down" : "neutral"),
+                        icon: data.change > 0 ? "trending-up" : (data.change < 0 ? "trending-down" : "minus"),
+                        color: data.change > 0 ? "text-emerald-400" : (data.change < 0 ? "text-red-400" : "text-gray-400")
+                    });
+                }
+            }
+            
+            // Add other mock items or fetch them from backend as needed
+            marketItems.push(
+                { name: "Market Dominance", value: "BTC 52%", trend: "neutral", icon: "pie-chart", color: "text-blue-400" },
+                { name: "Total Volume (24h)", value: "$120B", trend: "up", icon: "activity", color: "text-purple-400" },
+                { name: "Fear & Greed Index", value: "75 (Greed)", trend: "up", icon: "gauge", color: "text-emerald-400" }
+            );
+
+            container.innerHTML = marketItems.map(item => `
+                <div class="bg-gray-800/50 p-5 rounded-lg flex items-center gap-4">
+                    <i data-lucide="${item.icon}" class="w-8 h-8 ${item.color} flex-shrink-0"></i>
+                    <div>
+                        <p class="text-gray-400 text-sm">${item.name}</p>
+                        <p class="text-white text-xl font-bold">${item.value}</p>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Chat Functionality
+        function populateChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.innerHTML = ''; // Clear existing messages
+            messages.forEach(msg => appendMessage(msg.sender, msg.text, false)); // Don't animate old messages
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom
+        }
+
+        function appendMessage(sender, text, animate = true) {
+            const chatWindow = document.getElementById('chatWindow');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('flex', 'flex-col'); // Use flex-col for individual alignment
+
+            if (sender === 'user') {
+                messageElement.classList.add('items-end');
+                messageElement.innerHTML = `<div class="user-message">${text}</div>`;
+            } else {
+                messageElement.classList.add('items-start');
+                messageElement.innerHTML = `<div class="ai-message">${text}</div>`;
+            }
+
+            chatWindow.appendChild(messageElement);
+            if (animate) {
+                chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to new message
+            }
+        }
+
+        async function sendMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const messageText = chatInput.value.trim();
+
+            if (messageText === '') return;
+
+            // Display user message immediately
+            appendMessage('user', messageText);
+            messages.push({ sender: 'user', text: messageText });
+            chatInput.value = ''; // Clear input
+            playSound('click'); // Play click sound for sending
+
+            // Add a placeholder for AI response
+            const aiLoadingMessage = document.createElement('div');
+            aiLoadingMessage.classList.add('flex', 'flex-col', 'items-start');
+            aiLoadingMessage.innerHTML = `<div class="ai-message text-gray-400">Aura is typing...</div>`;
+            document.getElementById('chatWindow').appendChild(aiLoadingMessage);
+            document.getElementById('chatWindow').scrollTop = document.getElementById('chatWindow').scrollHeight;
+
+
+            try {
+                const response = await fetch('http://192.168.5.11:5000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        message: messageText,
+                        userName: userName, // Send user's current name
+                        aiName: aiName      // Send AI's current name
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiResponseText = data.response;
+
+                // Remove loading message
+                aiLoadingMessage.remove();
+
+                appendMessage('ai', aiResponseText);
+                messages.push({ sender: 'ai', text: aiResponseText });
+                speak(aiResponseText); // Read out AI response
+                
+            } catch (error) {
+                console.error("Error communicating with backend/Gemini:", error);
+                aiLoadingMessage.remove(); // Remove loading message on error
+                appendMessage('ai', `Sorry, I'm having trouble connecting to my AI brain. Please try again. (${error.message})`);
+                messages.push({ sender: 'ai', text: `Sorry, I'm having trouble connecting to my AI brain. Please try again. (${error.message})` });
+                playSound('error');
+            } finally {
+                document.getElementById('chatWindow').scrollTop = document.getElementById('chatWindow').scrollHeight;
+            }
+        }
+
+        function speak(text) {
+            // Only speak if Aura is not muted
+            if (isAuraMuted) {
+                console.log("Aura's voice is muted. Not speaking.");
+                return;
+            }
+
+            const synth = window.speechSynthesis;
+            if (synth.speaking) {
+                synth.cancel(); // Stop current speech if any
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.volume = parseFloat(localStorage.getItem('volume')) || 0.5; // Use stored volume
+            utterance.rate = 1; // You can adjust this
+            utterance.pitch = 1; // You can adjust this
+            synth.speak(utterance);
+            playSound('aiResponse'); // Play sound when AI starts speaking
+        }
+
+        function setupVoiceInput() {
+            const voiceInputBtn = document.getElementById('voiceInputBtn');
+            const chatInput = document.getElementById('chatInput');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (SpeechRecognition) {
+                const recognition = new SpeechRecognition();
+                recognition.continuous = false; // Listen for a single utterance
+                recognition.interimResults = false; // Only return final results
+                recognition.lang = 'en-US';
+
+                voiceInputBtn.addEventListener('click', () => {
+                    if (!isListening) {
+                        recognition.start();
+                        isListening = true;
+                        voiceInputBtn.classList.add('text-red-500'); // Indicate listening
+                        playSound('listening');
+                        console.log('Voice recognition started...');
+                    } else {
+                        recognition.stop();
+                        isListening = false;
+                        voiceInputBtn.classList.remove('text-red-500');
+                        playSound('stopListening');
+                        console.log('Voice recognition stopped.');
+                    }
+                });
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    chatInput.value = transcript;
+                    sendMessage(); // Send message after transcribing
+                    isListening = false;
+                    voiceInputBtn.classList.remove('text-red-500');
+                    playSound('stopListening');
+                };
+
+                recognition.onspeechend = () => {
+                    recognition.stop();
+                    isListening = false;
+                    voiceInputBtn.classList.remove('text-red-500');
+                    playSound('stopListening');
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    showNotification(`Voice input error: ${event.error}`, 'error');
+                    isListening = false;
+                    voiceInputBtn.classList.remove('text-red-500');
+                    playSound('error');
+                };
+            } else {
+                voiceInputBtn.style.display = 'none'; // Hide button if not supported
+                console.warn('Speech recognition not supported in this browser.');
+            }
+        }
+
+        // --- UPDATED runAnalysis FUNCTION to use AI-generated numbers ---
+        async function runAnalysis() {
+            const pair = document.getElementById('analysisPair').value;
+            
+            // Collect selected timeframes
+            const selectedTimeframes = Array.from(document.querySelectorAll('#analysisTimeframes input[name="timeframe"]:checked'))
+                                            .map(cb => cb.value);
+            
+            // Collect selected indicators
+            const selectedIndicators = Array.from(document.querySelectorAll('#analysisIndicators input[name="indicator"]:checked'))
+                                            .map(cb => cb.value);
+            
+            // Collect selected trade type
+            const tradeTypeElement = document.querySelector('#tradeType input[name="trade_type"]:checked');
+            const tradeType = tradeTypeElement ? tradeTypeElement.value : 'N/A';
+
+            const balanceRange = document.getElementById('balanceRange').value;
+            const leverage = document.getElementById('leverage').value;
+
+
+            const runAnalysisBtn = document.getElementById('runAnalysisBtn');
+            const analysisResultDiv = document.getElementById('analysisResult');
+            const resultPairSpan = document.getElementById('resultPair');
+            const resultTimeframeSpan = document.getElementById('resultTimeframe');
+            const signalTextSpan = document.getElementById('signalText');
+            const confidenceTextSpan = document.getElementById('confidenceText');
+            const analysisDetailsDiv = document.getElementById('analysisDetails');
+
+            // Basic validation
+            if (selectedTimeframes.length === 0) {
+                showNotification('Please select at least one timeframe.', 'error');
+                return;
+            }
+            if (selectedIndicators.length === 0) {
+                showNotification('Please select at least one technical indicator.', 'error');
+                return;
+            }
+            if (tradeType === 'N/A') {
+                showNotification('Please select a trade type.', 'error');
+                return;
+            }
+
+
+            // Reset display and show loading state
+            analysisResultDiv.classList.add('hidden');
+            runAnalysisBtn.textContent = 'Analyzing...';
+            runAnalysisBtn.disabled = true;
+            playSound('click');
+            analysisDetailsDiv.textContent = 'Generating AI analysis...'; // Show loading text
+
+            try {
+                // Get the current price for the selected analysis pair from cached data
+                let currentPriceForAnalysis = 0; // Initialize with 0 or a sensible default
+                if (cachedMarketData && cachedMarketData[pair] && typeof cachedMarketData[pair].price === 'number') {
+                    currentPriceForAnalysis = cachedMarketData[pair].price;
+                    console.log(`Using current price for ${pair}: ${currentPriceForAnalysis}`);
+                } else {
+                    console.warn(`Could not get current price for ${pair} from cachedMarketData. Analysis might be less contextual.`);
+                    showNotification(`Warning: Could not get live price for ${pair}. Analysis may be less accurate.`, 'info');
+                }
+
+                const response = await fetch('http://192.168.5.11:5000/generate_analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        pair, 
+                        timeframes: selectedTimeframes,
+                        indicators: selectedIndicators,
+                        trade_type: tradeType,
+                        balance_range: balanceRange,
+                        leverage: leverage,
+                        current_price_for_pair: currentPriceForAnalysis // Pass the actual current price
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiAnalysisText = data.ai_analysis_text; // Get the textual part
+                const analysisData = data.analysis_data; // Get the structured data part
+
+                // Validate if structured data is present and valid
+                if (!analysisData || typeof analysisData.signal === 'undefined' || typeof analysisData.confidence === 'undefined') {
+                    throw new Error("AI did not provide complete structured analysis data.");
+                }
+
+                // Update UI with AI-generated analysis
+                resultPairSpan.textContent = pair;
+                resultTimeframeSpan.textContent = selectedTimeframes.join(', ');
+                analysisDetailsDiv.textContent = aiAnalysisText; // Display AI's detailed textual analysis
+
+                // Use AI-generated values for structured fields
+                signalTextSpan.textContent = analysisData.signal;
+                confidenceTextSpan.textContent = analysisData.confidence;
+
+                // Apply color based on AI signal
+                if (analysisData.signal === 'BUY') {
+                    signalTextSpan.className = 'text-emerald-400 text-3xl font-bold';
+                } else if (analysisData.signal === 'SELL') {
+                    signalTextSpan.className = 'text-red-400 text-3xl font-bold';
+                } else {
+                    signalTextSpan.className = 'text-gray-400 text-3xl font-bold';
+                }
+
+                // Format and display numerical values from AI
+                document.getElementById('entryPrice').textContent = parseFloat(analysisData.entry).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                document.getElementById('tp1').textContent = parseFloat(analysisData.tp1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                document.getElementById('tp2').textContent = parseFloat(analysisData.tp2).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                document.getElementById('tp3').textContent = parseFloat(analysisData.tp3).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                document.getElementById('sl').textContent = parseFloat(analysisData.sl).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                document.getElementById('rrRatio').textContent = analysisData.rr_ratio; // Should be string like "1:X.X"
+                document.getElementById('displayLeverage').textContent = leverage; // Display the leverage selected by user
+
+                analysisResultDiv.classList.remove('hidden');
+
+                // Store analysis result (optional, for "Recent AI Analysis" on dashboard)
+                const analysisResult = {
+                    id: Date.now(),
+                    pair,
+                    timeframes: selectedTimeframes,
+                    indicators: selectedIndicators,
+                    trade_type: tradeType,
+                    balance_range: balanceRange,
+                    leverage: leverage,
+                    signal: analysisData.signal,
+                    confidence: analysisData.confidence,
+                    entry: parseFloat(analysisData.entry),
+                    tp1: parseFloat(analysisData.tp1),
+                    tp2: parseFloat(analysisData.tp2),
+                    tp3: parseFloat(analysisData.tp3),
+                    sl: parseFloat(analysisData.sl),
+                    rrRatio: analysisData.rr_ratio,
+                    aiAnalysis: aiAnalysisText // Store the actual AI text
+                };
+                analysisResults.unshift(analysisResult); 
+                updateRecentAnalysisDisplay();
+                
+                playSound('analysisComplete');
+
+            } catch (error) {
+                console.error("Error generating analysis:", error);
+                analysisDetailsDiv.textContent = `Error: ${error.message}. Failed to get analysis from AI.`;
+                signalTextSpan.textContent = 'ERROR';
+                signalTextSpan.className = 'text-red-400 text-3xl font-bold';
+                confidenceTextSpan.textContent = '';
+                analysisResultDiv.classList.remove('hidden');
+                playSound('error');
+            } finally {
+                runAnalysisBtn.textContent = 'Run ORSCR Analysis';
+                runAnalysisBtn.disabled = false;
+                lucide.createIcons();
+            }
+        }
+
+        // Modified updateRecentAnalysisDisplay to show AI text and multiple timeframes/indicators
+        function updateRecentAnalysisDisplay() {
+            const display = document.getElementById('recentAnalysisDisplay');
+            if (analysisResults.length > 0) {
+                const latest = analysisResults[0]; // Get the most recent
+                display.innerHTML = `
+                    <p class="text-gray-300 text-base mb-2"><strong>${latest.pair}</strong> (${latest.timeframes.join(', ')}) - ${latest.indicators.join(', ')}</p>
+                    <p class="text-gray-300 text-xl font-bold">Signal: <span class="${latest.signal === 'BUY' ? 'text-emerald-400' : (latest.signal === 'SELL' ? 'text-red-400' : 'text-gray-400')}">${latest.signal}</span> (${latest.confidence})</p>
+                    <p class="text-gray-400 text-sm mt-1 mb-2">${latest.aiAnalysis.substring(0, 100)}...</p>
+                    <button onclick="displayAnalysisResult(analysisResults[0])" class="mt-3 text-blue-400 hover:text-blue-300 text-sm">View Details</button>
+                `;
+            } else {
+                display.textContent = 'No recent analysis. Run one in the \'Analysis\' tab.';
+            }
+        }
+
+        // Modified displayAnalysisResult to show AI text and multiple timeframes/indicators
+        function displayAnalysisResult(result) {
+            const resultDiv = document.getElementById('analysisResult');
+            document.getElementById('resultPair').textContent = result.pair;
+            document.getElementById('resultTimeframe').textContent = result.timeframes.join(', '); // Display all selected timeframes
+            document.getElementById('signalText').textContent = result.signal;
+            document.getElementById('confidenceText').textContent = `(${result.confidence} Confidence)`;
+            document.getElementById('analysisDetails').textContent = result.aiAnalysis; // Display full AI analysis
+
+            if (result.signal === 'BUY') {
+                document.getElementById('signalText').className = 'text-emerald-400 text-3xl font-bold';
+            } else if (result.signal === 'SELL') {
+                document.getElementById('signalText').className = 'text-red-400 text-3xl font-bold';
+            } else {
+                document.getElementById('signalText').className = 'text-gray-400 text-3xl font-bold';
+            }
+
+            document.getElementById('entryPrice').textContent = result.entry.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            document.getElementById('tp1').textContent = result.tp1.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            document.getElementById('tp2').textContent = result.tp2.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            document.getElementById('tp3').textContent = result.tp3.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            document.getElementById('sl').textContent = result.sl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            document.getElementById('rrRatio').textContent = result.rrRatio;
+            document.getElementById('displayLeverage').textContent = result.leverage; // Ensure this is the correct ID
+
+            resultDiv.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+
+        // --- NEW chatAboutAnalysis FUNCTION ---
+        function chatAboutAnalysis() {
+            const analysisText = document.getElementById('analysisDetails').textContent;
+            if (analysisText) {
+                document.getElementById('chatInput').value = `Regarding the recent analysis for ${document.getElementById('resultPair').textContent} (${document.getElementById('resultTimeframe').textContent}):\n\n"${analysisText}"\n\nCan you elaborate or answer questions about this?`;
+                showTab('ai-chat'); // Switch to AI Chat tab
+                document.getElementById('chatInput').focus(); // Focus on the input field
+            } else {
+                showNotification('No analysis available to chat about.', 'info');
+            }
+        }
+
+
+        // Price Alerts Functionality
+        function saveAlerts() {
+            localStorage.setItem('priceAlerts', JSON.stringify(priceAlerts));
+        }
+
+        function loadAlerts() {
+            const storedAlerts = localStorage.getItem('priceAlerts');
+            if (storedAlerts) {
+                priceAlerts = JSON.parse(storedAlerts);
+                // Ensure 'triggered' status is reset on load unless it's a persistent alert system
+                priceAlerts.forEach(alert => alert.triggered = false); // Reset triggered state on load
+            }
+        }
+
+        function populatePriceAlerts() {
+            console.log("populatePriceAlerts() called."); // DEBUG LOG
+            const alertsList = document.getElementById('alertsList');
+            const noAlertsMessage = document.getElementById('noAlertsMessage'); // Correctly get the element
+
+            if (!alertsList) { // DEBUG LOG
+                console.error("Error: alertsList element not found!");
+                return;
+            }
+            if (!noAlertsMessage) { // DEBUG LOG
+                console.error("Error: noAlertsMessage element not found!");
+                return;
+            }
+
+            alertsList.innerHTML = ''; // Clear existing alerts
+            if (priceAlerts.length === 0) {
+                noAlertsMessage.style.display = 'block';
+            } else {
+                noAlertsMessage.style.display = 'none';
+                priceAlerts.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.id = `alert-${alert.id}`;
+                    alertDiv.className = `bg-gray-800/50 p-4 rounded-lg flex justify-between items-center ${alert.triggered ? 'border-l-4 border-yellow-500' : ''}`;
+                    alertDiv.innerHTML = `
+                        <div>
+                            <p class="text-lg font-semibold text-white">${alert.pair} <span class="text-gray-400 text-sm">is ${alert.condition}</span> ${alert.price.toLocaleString()}</p>
+                            <p class="text-gray-500 text-sm">Set on: ${new Date(alert.id).toLocaleString()}</p>
+                        </div>
+                        <button class="remove-alert-btn text-red-400 hover:text-red-500 transition-colors" data-id="${alert.id}">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    `;
+                    alertsList.appendChild(alertDiv);
+                });
+            }
+            lucide.createIcons();
+
+            document.querySelectorAll('.remove-alert-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const idToRemove = parseInt(e.currentTarget.dataset.id);
+                    priceAlerts = priceAlerts.filter(alert => alert.id !== idToRemove);
+                    saveAlerts();
+                    populatePriceAlerts();
+                    playSound('click');
+                });
+            });
+
+            updateActiveAlertsDisplay(); // Update dashboard summary
+        }
+
+        function updateActiveAlertsDisplay() {
+            const display = document.getElementById('activeAlertsDisplay');
+            if (!display) { // DEBUG LOG
+                console.error("Error: activeAlertsDisplay element not found!");
+                return;
+            }
+            if (priceAlerts.length > 0) {
+                display.innerHTML = priceAlerts.map(alert => `
+                    <p class="text-gray-300 text-base mb-1">${alert.pair}: ${alert.condition} <span class="font-semibold">${alert.price.toLocaleString()}</span></p>
+                `).join('');
+            } else {
+                display.textContent = 'No active price alerts. Set one up in the \'Price Alerts\' tab.';
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info', value = '') {
+            const container = document.getElementById('notificationContainer');
+            const notificationDiv = document.createElement('div');
+            notificationDiv.classList.add('notification');
+
+            let iconHtml = '';
+            let iconColor = 'text-blue-400';
+            if (type === 'error') {
+                iconHtml = '<i data-lucide="alert-triangle" class="w-6 h-6 text-red-500"></i>';
+                iconColor = 'text-red-500';
+            } else if (type === 'success') {
+                iconHtml = '<i data-lucide="check-circle" class="w-6 h-6 text-emerald-500"></i>';
+                iconColor = 'text-emerald-500';
+            } else if (type === 'Alert!') { // Specific for price alerts
+                iconHtml = '<i data-lucide="bell" class="w-6 h-6 text-yellow-500"></i>';
+                iconColor = 'text-yellow-500';
+            } else {
+                iconHtml = '<i data-lucide="info" class="w-6 h-6 text-blue-400"></i>';
+            }
+
+            notificationDiv.innerHTML = `
+                ${iconHtml}
+                <div>
+                    <p class="font-semibold">${type}</p>
+                    <p class="text-sm">${message}</p>
+                </div>
+            `;
+
+            container.appendChild(notificationDiv);
+            lucide.createIcons(); // Ensure icons are rendered
+
+            // Remove after animation (7s)
+            setTimeout(() => {
+                notificationDiv.remove();
+                alertNotifications = alertNotifications.filter(n => n !== notificationDiv);
+            }, 7000);
+        }
+
+        // Settings Management
+        function saveSettings() {
+            localStorage.setItem('userName', userName);
+            localStorage.setItem('aiName', aiName);
+            localStorage.setItem('volume', document.getElementById('volumeControl').value);
+            // Save mute state
+            localStorage.setItem('isAuraMuted', document.getElementById('muteAuraVoiceCheckbox').checked);
+
+            updateWelcomeMessage();
+            updateChatPlaceholder();
+            showNotification('Settings saved successfully!', 'success');
+            playSound('click');
+        }
+
+        function loadSettings() {
+            const storedUserName = localStorage.getItem('userName');
+            const storedAiName = localStorage.getItem('aiName');
+            const storedVolume = localStorage.getItem('volume');
+            // Load mute state
+            const storedIsAuraMuted = localStorage.getItem('isAuraMuted');
+
+
+            if (storedUserName) {
+                userName = storedUserName;
+                document.getElementById('userNameInput').value = storedUserName;
+            }
+            if (storedAiName) {
+                aiName = storedAiName;
+                document.getElementById('aiNameInput').value = storedAiName;
+            }
+            if (storedVolume !== null) {
+                document.getElementById('volumeControl').value = storedVolume;
+                document.getElementById('volumeValue').textContent = `${Math.round(storedVolume * 100)}%`;
+                for (const key in sounds) {
+                    if (sounds[key] instanceof Audio) {
+                        sounds[key].volume = parseFloat(storedVolume);
+                    }
+                }
+            }
+            // Apply loaded mute state
+            if (storedIsAuraMuted !== null) {
+                isAuraMuted = (storedIsAuraMuted === 'true'); // localStorage stores as string
+                document.getElementById('muteAuraVoiceCheckbox').checked = isAuraMuted;
+            }
+        }
+
+        function updateWelcomeMessage() {
+            document.getElementById('welcomeMessage').textContent = `Hello, ${userName}! Welcome to ${aiName}.`;
+        }
+
+        function updateChatPlaceholder() {
+            document.getElementById('chatInput').placeholder = `Type your message or ask ${aiName}...`;
+        }
+
+        function setupSettingsListeners() { // Renamed from updateSettings for clarity
+            document.getElementById('volumeControl').addEventListener('input', (e) => {
+                const volume = parseFloat(e.target.value);
+                document.getElementById('volumeValue').textContent = `${Math.round(volume * 100)}%`;
+                for (const key in sounds) {
+                    if (sounds[key] instanceof Audio) {
+                        sounds[key].volume = volume;
+                    }
+                }
+            });
+
+            document.getElementById('userNameInput').addEventListener('change', (e) => {
+                userName = e.target.value.trim();
+                if (!userName) userName = "Trader"; // Fallback if empty
+            });
+
+            document.getElementById('aiNameInput').addEventListener('change', (e) => {
+                aiName = e.target.value.trim();
+                if (!aiName) aiName = "Aura"; // Fallback if empty
+            });
+
+            // Mute checkbox listener
+            document.getElementById('muteAuraVoiceCheckbox').addEventListener('change', (e) => {
+                isAuraMuted = e.target.checked;
+                console.log("Aura's voice muted status changed to:", isAuraMuted);
+                saveSettings(); // Save immediately when changed
+            });
+        }
+
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM Content Loaded. Initializing app."); // DEBUG LOG
+            loadSettings(); // Load settings first
+            loadAlerts(); // Load alerts
+            updateWelcomeMessage(); // Update based on loaded settings
+            updateChatPlaceholder(); // Update based on loaded AI name
+            populateChat(); // Populate chat after initial settings are loaded
+            setupSettingsListeners(); // Set up settings listeners
+
+            // Initial data fetch and UI population
+            updatePrice(); // This will now fetch data and populate both current price and market overview
+            populatePriceAlerts(); // Populate alerts list
+            updateRecentAnalysisDisplay(); // Populate recent analysis (if any from previous session)
+
+            // Add event listeners for navigation
+            const navItems = document.querySelectorAll('.nav-item');
+            console.log("Nav items found:", navItems.length); // DEBUG LOG
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent default link behavior
+                    console.log("Nav item clicked:", this.dataset.tab); // DEBUG LOG
+                    showTab(this.dataset.tab);
+                });
+            });
+
+            // Event listener for selectedPair change
+            const selectedPairDropdown = document.getElementById('selectedPair');
+            if (selectedPairDropdown) { // DEBUG LOG
+                console.log("Selected pair dropdown found:", selectedPairDropdown ? 'Yes' : 'No');
+                selectedPairDropdown.addEventListener('change', (e) => {
+                    selectedPair = e.target.value;
+                    console.log("Selected pair dropdown changed to:", e.target.value); // DEBUG LOG
+                    updatePrice(); // Call updatePrice to refresh for the new pair
+                    playSound('click');
+                });
+            } else {
+                console.error("Error: selectedPair dropdown element not found during DOMContentLoaded!"); // DEBUG LOG
+            }
+            
+            // Event listener for chat input and send button
+            document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent new line in input
+                    sendMessage();
+                }
+            });
+
+            // Setup voice input if supported
+            setupVoiceInput();
+
+            // Analysis tab listeners
+            document.getElementById('runAnalysisBtn').addEventListener('click', runAnalysis);
+            document.getElementById('chatAboutAnalysisBtn').addEventListener('click', chatAboutAnalysis);
+
+
+            // Price Alerts modal listeners
+            document.getElementById('addAlertBtn').addEventListener('click', () => {
+                document.getElementById('addAlertModal').classList.remove('hidden');
+                playSound('click');
+            });
+            document.getElementById('cancelAlertBtn').addEventListener('click', () => {
+                document.getElementById('addAlertModal').classList.add('hidden');
+                playSound('click');
+            });
+            document.getElementById('saveAlertBtn').addEventListener('click', () => {
+                const pair = document.getElementById('modalAlertPair').value;
+                const condition = document.getElementById('modalAlertCondition').value;
+                const price = parseFloat(document.getElementById('modalAlertPrice').value);
+
+                if (isNaN(price) || price <= 0) {
+                    showNotification('Please enter a valid target price.', 'error');
+                    playSound('error');
+                    return;
+                }
+
+                const newAlert = {
+                    id: Date.now(), // Unique ID based on timestamp
+                    pair: pair,
+                    condition: condition,
+                    price: price,
+                    triggered: false // Reset triggered state
+                };
+
+                priceAlerts.push(newAlert);
+                saveAlerts();
+                populatePriceAlerts();
+                document.getElementById('addAlertModal').classList.add('hidden');
+                document.getElementById('modalAlertPrice').value = ''; // Clear input
+                showNotification(`Alert set for ${pair}: ${condition} ${price.toLocaleString()}`, 'success');
+                playSound('notification');
+            });
+
+            // Settings tab listener
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+
+            // Initial tab display
+            showTab('dashboard');
+
+            // Update prices every 5 seconds (now calling the backend)
+            setInterval(updatePrice, 5000);
+
+        });
+    </script>
+</body>
+</html>
