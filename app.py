@@ -407,7 +407,7 @@ def generate_analysis():
         logging.error(f"Error generating analysis: {e}")
         return jsonify({"error": str(e)}), 500
 
-# New endpoint for logging trades
+# Endpoint for logging trades (your existing one)
 @app.route('/log_trade', methods=['POST'])
 @cross_origin()
 def log_trade():
@@ -433,7 +433,7 @@ def log_trade():
             cursor.execute('''
                 INSERT INTO trades (pair, entry_price, exit_price, profit_loss, trade_type, timestamp)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (pair, entry_price, exit_price, profit_loss, trade_type, timestamp)) # Corrected here: exit_price, not exit_loss
+            ''', (pair, entry_price, exit_price, profit_loss, trade_type, timestamp))
             db.commit()
 
         return jsonify({'message': 'Trade logged successfully!'}), 201
@@ -441,6 +441,26 @@ def log_trade():
         return jsonify({'error': 'Invalid number format for prices or profit/loss'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# NEW ENDPOINT: Get all trades for analytics
+@app.route('/get_trades', methods=['GET'])
+@cross_origin()
+def get_trades():
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, pair, entry_price, exit_price, profit_loss, trade_type, timestamp FROM trades")
+        trades = cursor.fetchall()
+        # Convert Row objects to dictionaries for JSON serialization
+        trades_list = []
+        for trade in trades:
+            trades_list.append(dict(trade))
+        return jsonify(trades_list), 200
+    except sqlite3.Error as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
 
 # This part is usually for local development
 if __name__ == '__main__':
