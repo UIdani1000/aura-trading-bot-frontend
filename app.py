@@ -3,20 +3,53 @@ import time
 import json
 import re # Import regex module
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin # Ensure cross_origin is imported
 import google.generativeai as genai
 from collections import deque
-from datetime import datetime
+from datetime import datetime # Make sure datetime is imported
 import threading
 import requests
 import logging # Ensure logging is imported
 import config # Ensure config is imported at the top
+import sqlite3 # Import sqlite3 for database operations
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 CORS(app) # Enable CORS for all routes
+
+# --- Database setup ---
+DATABASE = 'trades.db' # This file will be created in your app's root directory on Render
+
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row # This makes rows behave like dictionaries
+    return conn
+
+def init_db():
+    with get_db() as db:
+        cursor = db.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS trades (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pair TEXT NOT NULL,
+                entry_price REAL NOT NULL,
+                exit_price REAL NOT NULL,
+                profit_loss REAL NOT NULL,
+                trade_type TEXT NOT NULL, -- e.g., 'buy' or 'sell'
+                timestamp TEXT NOT NULL -- ISO format string
+            )
+        ''')
+        db.commit()
+
+# Initialize the database when the app starts
+# This ensures the 'trades.db' file and 'trades' table are created
+# when the Flask app context is available (e.g., on startup).
+with app.app_context():
+    init_db()
+# --- End Database setup ---
+
 
 # --- Gemini API Configuration ---
 gemini_model = None # Initialize as None
@@ -197,7 +230,7 @@ def chat_with_gemini(): # Renamed to avoid conflict with global 'chat' variable
 
         # Ensure the chat object is ready for the current conversation
         if not chat.history:
-             chat.send_message(system_instruction)
+            chat.send_message(system_instruction)
 
         response = chat.send_message(user_message)
         
@@ -374,6 +407,42 @@ def generate_analysis():
         logging.error(f"Error generating analysis: {e}")
         return jsonify({"error": str(e)}), 500
 
+# New endpoint for logging trades
+@app.route('/log_trade', methods=['POST'])
+@cross_origin()
+def log_trade():
+    data = request.json
+    if not data:
+        return jsonify({'error': 'Invalid JSON data'}), 400
+
+    required_fields = ['pair', 'entry_price', 'exit_price', 'profit_loss', 'trade_type']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'Missing field: {field}'}), 400
+
+    try:
+        pair = data['pair']
+        entry_price = float(data['entry_price'])
+        exit_price = float(data['exit_price'])
+        profit_loss = float(data['profit_loss'])
+        trade_type = data['trade_type']
+        timestamp = datetime.now().isoformat()
+
+        with get_db() as db:
+            cursor = db.cursor()
+            cursor.execute('''
+                INSERT INTO trades (pair, entry_price, exit_price, profit_loss, trade_type, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (pair, entry_price, exit_price, profit_loss, trade_type, timestamp)) # Corrected here: exit_price, not exit_loss
+            db.commit()
+
+        return jsonify({'message': 'Trade logged successfully!'}), 201
+    except ValueError:
+        return jsonify({'error': 'Invalid number format for prices or profit/loss'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# This part is usually for local development
 if __name__ == '__main__':
     # Get port from environment variable or default to 5000
     port = int(os.environ.get('PORT', 5000))
