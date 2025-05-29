@@ -496,6 +496,9 @@
 
 
     <script>
+        // Set the backend URL to your deployed Render service
+        const backendUrl = "https://aura-trading-bot-backend.onrender.com"; // UPDATED URL
+
         // Global State Variables
         let userName = "Trader";
         let aiName = "Aura";
@@ -582,7 +585,7 @@
 
             try {
                 // Fetch all market prices from your backend
-                const response = await fetch('http://192.168.5.11:5000/all_market_prices'); // <--- Backend URL
+                const response = await fetch(`${backendUrl}/all_market_prices`); // UPDATED URL
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -749,7 +752,7 @@
 
 
             try {
-                const response = await fetch('http://192.168.5.11:5000/chat', {
+                const response = await fetch(`${backendUrl}/chat`, { // UPDATED URL
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -923,7 +926,7 @@
                     showNotification(`Warning: Could not get live price for ${pair}. Analysis may be less accurate.`, 'info');
                 }
 
-                const response = await fetch('http://192.168.5.11:5000/generate_analysis', {
+                const response = await fetch(`${backendUrl}/generate_analysis`, { // UPDATED URL
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
