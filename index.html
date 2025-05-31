@@ -196,6 +196,60 @@
         .radio-group label span {
             margin-left: 8px;
         }
+
+        /* Table styling for trade statistics */
+        .trade-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .trade-table th, .trade-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #30363d;
+        }
+        .trade-table th {
+            background-color: #21262d;
+            font-weight: 600;
+            color: #e6edf3;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        .trade-table td {
+            background-color: #161b22;
+            color: #c9d1d9;
+        }
+        .trade-table tr:hover td {
+            background-color: #21262d;
+        }
+        .trade-table .profit {
+            color: #34d399; /* Emerald 400 */
+        }
+        .trade-table .loss {
+            color: #ef4444; /* Red 400 */
+        }
+        .metric-card {
+            background-color: #161b22;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .metric-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .metric-card .label {
+            font-size: 0.9rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body class="flex min-h-screen">
@@ -225,6 +279,11 @@
                     <li>
                         <a href="#" class="nav-item" data-tab="price-alerts">
                             <i data-lucide="bell" class="w-5 h-5 mr-3"></i> Price Alerts
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-tab="trade-statistics">
+                            <i data-lucide="line-chart" class="w-5 h-5 mr-3"></i> Trade Statistics
                         </a>
                     </li>
                     <li>
@@ -289,7 +348,34 @@
                         No active price alerts. Set one up in the 'Price Alerts' tab.
                     </div>
                 </div>
-            </div>
+
+                <div class="bg-gray-900 rounded-xl shadow-lg p-6 lg:col-span-3">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-4">Trade Statistics Summary</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="tradeSummaryMetrics">
+                        <div class="metric-card">
+                            <p id="totalProfitLoss" class="value text-white">$--.--</p>
+                            <p class="label">Total P/L</p>
+                        </div>
+                        <div class="metric-card">
+                            <p id="totalTrades" class="value text-white">0</p>
+                            <p class="label">Total Trades</p>
+                        </div>
+                        <div class="metric-card">
+                            <p id="winRate" class="value text-white">0.00%</p>
+                            <p class="label">Win Rate</p>
+                        </div>
+                        <div class="metric-card">
+                            <p id="avgProfitPerTrade" class="value text-white">$--.--</p>
+                            <p class="label">Avg. Profit/Trade</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button onclick="showTab('trade-statistics')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            View All Trades
+                        </button>
+                    </div>
+                </div>
+                </div>
         </div>
 
         <div id="ai-chat" class="tab-content">
@@ -428,6 +514,70 @@
             </div>
         </div>
 
+        <div id="trade-statistics" class="tab-content">
+            <div class="bg-gray-900 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-200 mb-6">Log New Trade</h2>
+                <form id="logTradeForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label for="tradePair" class="block text-gray-400 text-sm font-bold mb-2">Currency Pair</label>
+                        <select id="tradePair" name="pair" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white">
+                            <option value="BTC/USD">BTC/USD</option>
+                            <option value="ETH/USD">ETH/USD</option>
+                            <option value="SOL/USD">SOL/USD</option>
+                            <option value="XRP/USD">XRP/USD</option>
+                            <option value="ADA/USD">ADA/USD</option>
+                            <option value="DOGE/USD">DOGE/USD</option>
+                            <option value="RVN/USD">RVN/USD</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tradeTypeInput" class="block text-gray-400 text-sm font-bold mb-2">Trade Type</label>
+                        <select id="tradeTypeInput" name="trade_type" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white">
+                            <option value="buy">BUY</option>
+                            <option value="sell">SELL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="entryPriceInput" class="block text-gray-400 text-sm font-bold mb-2">Entry Price</label>
+                        <input type="number" id="entryPriceInput" name="entry_price" step="0.01" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white" placeholder="e.g., 68000.00" required>
+                    </div>
+                    <div>
+                        <label for="exitPriceInput" class="block text-gray-400 text-sm font-bold mb-2">Exit Price</label>
+                        <input type="number" id="exitPriceInput" name="exit_price" step="0.01" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white" placeholder="e.g., 68500.00" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="profitLossInput" class="block text-gray-400 text-sm font-bold mb-2">Profit/Loss ($)</label>
+                        <input type="number" id="profitLossInput" name="profit_loss" step="0.01" class="w-full bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-white" placeholder="e.g., 500.00 or -150.00" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            Log Trade
+                        </button>
+                    </div>
+                </form>
+
+                <h2 class="text-xl font-semibold text-gray-200 mb-6 mt-10">All Logged Trades</h2>
+                <div id="tradesListContainer" class="overflow-x-auto rounded-lg">
+                    <table class="trade-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Pair</th>
+                                <th>Type</th>
+                                <th>Entry Price</th>
+                                <th>Exit Price</th>
+                                <th>P/L</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesTableBody">
+                            <tr><td colspan="7" class="text-center text-gray-500 py-4">No trades logged yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div id="settings" class="tab-content">
             <div class="bg-gray-900 rounded-xl shadow-lg p-6">
                 <h2 class="text-xl font-semibold text-gray-200 mb-6">Settings</h2>
@@ -561,6 +711,15 @@
             }
             console.log("Active nav item after click:", document.querySelector('.nav-item.active')?.dataset.tab); // DEBUG LOG
             playSound('click');
+
+            // If "Trade Statistics" tab is shown, fetch and display trades
+            if (tabId === 'trade-statistics') {
+                fetchAndDisplayTrades();
+            }
+            // NEW: If "Dashboard" tab is shown, fetch and display trade summary
+            if (tabId === 'dashboard') {
+                fetchAndDisplayTradeSummary();
+            }
         }
 
         // Dashboard Functionality
@@ -612,10 +771,12 @@
                     if (priceChange > 0) {
                         changeElement.className = 'text-emerald-400 text-xl ml-3 flex items-center';
                         arrowElement.setAttribute('data-lucide', 'arrow-up-right');
-                    } else if (priceChange < 0) {
+                    }
+                    else if (priceChange < 0) {
                         changeElement.className = 'text-red-400 text-xl ml-3 flex items-center';
                         arrowElement.setAttribute('data-lucide', 'arrow-down-right');
-                    } else {
+                    }
+                    else {
                         changeElement.className = 'text-gray-400 text-xl ml-3 flex items-center';
                         arrowElement.setAttribute('data-lucide', 'minus');
                     }
@@ -1284,6 +1445,151 @@
             });
         }
 
+        // --- NEW: Trade Statistics Functions ---
+
+        // Function to handle logging a new trade
+        async function logTrade(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const form = event.target;
+            const tradeData = {
+                pair: form.tradePair.value,
+                trade_type: form.tradeTypeInput.value,
+                entry_price: parseFloat(form.entryPriceInput.value),
+                exit_price: parseFloat(form.exitPriceInput.value),
+                profit_loss: parseFloat(form.profitLossInput.value)
+            };
+
+            // Basic validation
+            if (isNaN(tradeData.entry_price) || isNaN(tradeData.exit_price) || isNaN(tradeData.profit_loss)) {
+                showNotification('Please enter valid numbers for prices and profit/loss.', 'error');
+                playSound('error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${backendUrl}/log_trade`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(tradeData),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                showNotification(data.message, 'success');
+                playSound('notification');
+                form.reset(); // Clear the form after successful submission
+                fetchAndDisplayTrades(); // Refresh the trades list
+                fetchAndDisplayTradeSummary(); // NEW: Refresh trade summary on dashboard
+            } catch (error) {
+                console.error("Error logging trade:", error);
+                showNotification(`Failed to log trade: ${error.message}`, 'error');
+                playSound('error');
+            }
+        }
+
+        // Function to fetch and display all trades
+        async function fetchAndDisplayTrades() {
+            const tradesTableBody = document.getElementById('tradesTableBody');
+            tradesTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">Loading trades...</td></tr>'; // Show loading state
+
+            try {
+                const response = await fetch(`${backendUrl}/get_trades`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const trades = await response.json();
+
+                tradesTableBody.innerHTML = ''; // Clear loading state or previous data
+
+                if (trades.length === 0) {
+                    tradesTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">No trades logged yet.</td></tr>';
+                } else {
+                    trades.forEach(trade => {
+                        const row = document.createElement('tr');
+                        const profitLossClass = trade.profit_loss >= 0 ? 'profit' : 'loss';
+                        const formattedTimestamp = new Date(trade.timestamp).toLocaleString();
+
+                        row.innerHTML = `
+                            <td>${trade.id}</td>
+                            <td>${trade.pair}</td>
+                            <td>${trade.trade_type.toUpperCase()}</td>
+                            <td>$${trade.entry_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
+                            <td>$${trade.exit_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
+                            <td class="${profitLossClass}">$${trade.profit_loss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td>${formattedTimestamp}</td>
+                        `;
+                        tradesTableBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching trades:", error);
+                tradesTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-red-500 py-4">Failed to load trades: ${error.message}</td></tr>`;
+                showNotification(`Failed to load trades: ${error.message}`, 'error');
+                playSound('error');
+            }
+        }
+
+        // NEW: Function to fetch and display trade summary
+        async function fetchAndDisplayTradeSummary() {
+            const totalProfitLossElem = document.getElementById('totalProfitLoss');
+            const totalTradesElem = document.getElementById('totalTrades');
+            const winRateElem = document.getElementById('winRate');
+            const avgProfitPerTradeElem = document.getElementById('avgProfitPerTrade');
+
+            // Reset to loading state
+            totalProfitLossElem.textContent = '--.--';
+            totalTradesElem.textContent = '0';
+            winRateElem.textContent = '0.00%';
+            avgProfitPerTradeElem.textContent = '--.--';
+            
+            try {
+                const response = await fetch(`${backendUrl}/get_trade_summary`); // This new endpoint needs to be created in backend
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const summary = await response.json();
+
+                // Update UI with fetched summary data
+                totalProfitLossElem.textContent = `$${summary.total_profit_loss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                totalProfitLossElem.classList.remove('text-emerald-400', 'text-red-400');
+                if (summary.total_profit_loss >= 0) {
+                    totalProfitLossElem.classList.add('text-emerald-400'); // Green for profit
+                } else {
+                    totalProfitLossElem.classList.add('text-red-400'); // Red for loss
+                }
+
+                totalTradesElem.textContent = summary.total_trades.toLocaleString();
+                winRateElem.textContent = `${summary.win_rate.toFixed(2)}%`;
+                
+                avgProfitPerTradeElem.textContent = `$${summary.average_profit_per_trade.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                avgProfitPerTradeElem.classList.remove('text-emerald-400', 'text-red-400', 'text-white'); // Remove old colors
+                if (summary.average_profit_per_trade > 0) {
+                    avgProfitPerTradeElem.classList.add('text-emerald-400');
+                } else if (summary.average_profit_per_trade < 0) {
+                    avgProfitPerTradeElem.classList.add('text-red-400');
+                } else {
+                    avgProfitPerTradeElem.classList.add('text-white'); // Default for zero
+                }
+
+
+            } catch (error) {
+                console.error("Error fetching trade summary:", error);
+                totalProfitLossElem.textContent = 'Error';
+                totalTradesElem.textContent = 'Error';
+                winRateElem.textContent = 'Error';
+                avgProfitPerTradeElem.textContent = 'Error';
+                showNotification(`Failed to load trade summary: ${error.message}`, 'error');
+                playSound('error');
+            }
+        }
+
 
         // Initialization
         document.addEventListener('DOMContentLoaded', function() {
@@ -1299,6 +1605,8 @@
             updatePrice(); // This will now fetch data and populate both current price and market overview
             populatePriceAlerts(); // Populate alerts list
             updateRecentAnalysisDisplay(); // Populate recent analysis (if any from previous session)
+            fetchAndDisplayTradeSummary(); // NEW: Fetch and display trade summary on dashboard initially
+
 
             // Add event listeners for navigation
             const navItems = document.querySelectorAll('.nav-item');
@@ -1388,6 +1696,8 @@
             // Update prices every 5 seconds (now calling the backend)
             setInterval(updatePrice, 5000);
 
+            // Add event listener for the log trade form
+            document.getElementById('logTradeForm').addEventListener('submit', logTrade);
         });
     </script>
 </body>
