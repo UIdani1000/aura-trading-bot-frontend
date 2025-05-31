@@ -6,666 +6,377 @@
     <title>Aura Trading Bot</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-            <div class="logo">
-                <img src="logo.png" alt="Aura Logo">
-                <h2>Aura</h2>
+            <div class="logo-container">
+                <img src="logo.png" alt="Aura Logo" class="logo">
+                <span class="app-name">Aura</span>
             </div>
             <nav class="nav-menu">
                 <ul>
-                    <li class="active" data-section="dashboard">
-                        <a href="#"><img src="icons/dashboard-icon.png" alt="Dashboard"> Dashboard</a>
-                    </li>
-                    <li data-section="ai-chat">
-                        <a href="#"><img src="icons/chat-icon.png" alt="AI Chat"> AI Chat</a>
-                    </li>
-                    <li data-section="analysis">
-                        <a href="#"><img src="icons/analysis-icon.png" alt="Analysis"> Analysis</a>
-                    </li>
-                    <li data-section="price-alerts">
-                        <a href="#"><img src="icons/alerts-icon.png" alt="Price Alerts"> Price Alerts</a>
-                    </li>
-                    <li data-section="trade-statistics">
-                        <a href="#"><img src="icons/stats-icon.png" alt="Trade Statistics"> Trade Statistics</a>
-                    </li>
-                    <li data-section="settings">
-                        <a href="#"><img src="icons/settings-icon.png" alt="Settings"> Settings</a>
-                    </li>
+                    <li><a href="#" class="active"><img src="icons/dashboard-icon.png" alt="Dashboard Icon"> Dashboard</a></li>
+                    <li><a href="#"><img src="icons/chat-icon.png" alt="AI Chat Icon"> AI Chat</a></li>
+                    <li><a href="#"><img src="icons/analysis-icon.png" alt="Analysis Icon"> Analysis</a></li>
+                    <li><a href="#"><img src="icons/alerts-icon.png" alt="Alerts Icon"> Price Alerts</a></li>
+                    <li><a href="#"><img src="icons/stats-icon.png" alt="Stats Icon"> Trade Statistics</a></li>
+                    <li><a href="#"><img src="icons/settings-icon.png" alt="Settings Icon"> Settings</a></li>
                 </ul>
             </nav>
-            <div class="copyright">
-                &copy; 2023 Aura. All rights reserved.
-            </div>
         </aside>
-
         <main class="main-content">
             <header class="header">
-                <h1>Hello, Trader! Welcome to Aura.</h1>
-                </header>
-
-            <section id="dashboard-section" class="content-section active">
-                <div class="dashboard-grid">
-                    <div class="card market-overview">
-                        <h3>Market Overview</h3>
-                        <div class="market-data" id="market-data">
-                            Loading market data...
-                        </div>
+                <input type="text" placeholder="Search..." class="search-bar">
+                <div class="user-profile">
+                    <span>Daniel</span>
+                    <div class="avatar"></div>
+                </div>
+            </header>
+            <section class="dashboard-overview">
+                <h1>Dashboard Overview</h1>
+                <div class="market-data">
+                    <div class="market-item">
+                        <span>BTC Price:</span> <span id="btc-price">Loading...</span>
                     </div>
-                    
-                    <div class="card trade-summary">
-                        <h3>Trade Summary</h3>
-                        <p>Total Trades: <span id="total-trades">0</span></p>
-                        <p>Total P/L: <span id="total-profit-loss">$0.00</span></p>
-                        <p>Win Rate: <span id="win-rate">0.00%</span></p>
-                        <p>Avg. P/L per Trade: <span id="avg-profit-per-trade">$0.00</span></p>
+                    <div class="market-item">
+                        <span>ETH Price:</span> <span id="eth-price">Loading...</span>
                     </div>
-
-                    <div class="card recent-trades">
-                        <h3>Recent Trades</h3>
-                        <table id="recent-trades-table">
-                            <thead>
-                                <tr>
-                                    <th>Pair</th>
-                                    <th>Type</th>
-                                    <th>Entry</th>
-                                    <th>Exit</th>
-                                    <th>P/L</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                </tbody>
-                        </table>
+                    <div class="market-item">
+                        <span>XRP Price:</span> <span id="xrp-price">Loading...</span>
                     </div>
-
-                    <div class="card performance-chart">
-                        <h3>Performance Chart</h3>
-                        <canvas id="performanceChart"></canvas>
+                    <div class="market-item">
+                        <span>SOL Price:</span> <span id="sol-price">Loading...</span>
                     </div>
                 </div>
             </section>
 
-            <section id="ai-chat-section" class="content-section">
+            <section class="chat-section">
                 <h2>AI Chat</h2>
-                <div class="chat-container">
-                    <div class="chat-window" id="chat-window">
-                        <div class="message aura-message">
-                            <p>Hello! How can I assist you with your trading today?</p>
-                        </div>
-                    </div>
-                    <div class="chat-input-area">
-                        <input type="text" id="chat-input" placeholder="Type your message or ask Aura...">
-                        <button id="send-button"><img src="icons/send-icon.png" alt="Send"></button>
+                <div class="chat-window" id="chat-window">
+                    <div class="message aura-message">
+                        Hello! I am Aura, your AI Trading Assistant. How can I help you today?
                     </div>
                 </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Type your message or ask Aura...">
+                    <button id="send-button"><img src="icons/send-icon.png" alt="Send"></button>
+                </div>
             </section>
 
-            <section id="analysis-section" class="content-section">
-                <h2>Generate Analysis</h2>
-                <div class="analysis-form-container">
-                    <form id="analysis-form">
-                        <div class="form-group">
-                            <label for="pair-select">Trading Pair:</label>
-                            <select id="pair-select" required>
-                                <option value="">Select a pair</option>
-                                <option value="BTC/USD">BTC/USD</option>
-                                <option value="ETH/USD">ETH/USD</option>
-                                <option value="SOL/USD">SOL/USD</option>
-                                <option value="XRP/USD">XRP/USD</option>
-                                <option value="ADA/USD">ADA/USD</option>
-                                <option value="DOGE/USD">DOGE/USD</option>
-                                <option value="RVN/USD">RVN/USD</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Timeframes:</label>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="tf-1m" value="1m"> <label for="tf-1m">1m</label>
-                                <input type="checkbox" id="tf-5m" value="5m"> <label for="tf-5m">5m</label>
-                                <input type="checkbox" id="tf-15m" value="15m"> <label for="tf-15m">15m</label>
-                                <input type="checkbox" id="tf-1h" value="1h"> <label for="tf-1h">1h</label>
-                                <input type="checkbox" id="tf-4h" value="4h"> <label for="tf-4h">4h</label>
-                                <input type="checkbox" id="tf-1d" value="1d"> <label for="tf-1d">1d</label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Indicators:</label>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="ind-rsi" value="RSI"> <label for="ind-rsi">RSI</label>
-                                <input type="checkbox" id="ind-macd" value="MACD"> <label for="ind-macd">MACD</label>
-                                <input type="checkbox" id="ind-bollinger" value="Bollinger Bands"> <label for="ind-bollinger">Bollinger Bands</label>
-                                <input type="checkbox" id="ind-fib" value="Fibonacci Retracement"> <label for="ind-fib">Fibonacci Retracement</label>
-                                <input type="checkbox" id="ind-ema" value="EMA"> <label for="ind-ema">EMA</label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="trade-type">Trade Type:</label>
-                            <select id="trade-type" required>
-                                <option value="">Select trade type</option>
-                                <option value="BUY">BUY</option>
-                                <option value="SELL">SELL</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="balance-range">Balance Range:</label>
-                            <input type="text" id="balance-range" placeholder="e.g., $1000 - $5000" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="leverage">Leverage:</label>
-                            <input type="text" id="leverage" placeholder="e.g., 10x, 20x" required>
-                        </div>
-                        <button type="submit">Generate Analysis</button>
-                    </form>
-                    <div class="analysis-results" id="analysis-results">
-                        <div class="analysis-card" id="ai-analysis-output" style="display: none;">
-                            <h3>Aura's Analysis</h3>
-                            <p id="analysis-text"></p>
-                            <div class="signals-table">
-                                <table>
-                                    <tr><td>Signal:</td><td id="signal-value"></td></tr>
-                                    <tr><td>Confidence:</td><td id="confidence-value"></td></tr>
-                                    <tr><td>Entry:</td><td id="entry-value"></td></tr>
-                                    <tr><td>TP1:</td><td id="tp1-value"></td></tr>
-                                    <tr><td>TP2:</td><td id="tp2-value"></td></tr>
-                                    <tr><td>TP3:</td><td id="tp3-value"></td></tr>
-                                    <tr><td>SL:</td><td id="sl-value"></td></tr>
-                                    <tr><td>R/R Ratio:</td><td id="rr-ratio-value"></td></tr>
-                                    <tr><td>Leverage:</td><td id="leverage-value"></td></tr>
-                                </table>
-                            </div>
-                            <button id="log-trade-button" style="display: none;">Log This Trade</button>
-                        </div>
+            <section class="analysis-section" style="display: none;">
+                <h2>Analysis</h2>
+                <button id="generate-analysis-button">Generate Market Analysis</button>
+                <div id="analysis-output" class="analysis-output">
                     </div>
-                </div>
             </section>
 
-            <section id="price-alerts-section" class="content-section">
-                <h2>Price Alerts</h2>
-                <div class="alert-form-container">
-                    <form id="alert-form">
-                        <div class="form-group">
-                            <label for="alert-pair">Trading Pair:</label>
-                            <select id="alert-pair" required>
-                                <option value="">Select a pair</option>
-                                <option value="BTC/USD">BTC/USD</option>
-                                <option value="ETH/USD">ETH/USD</option>
-                                <option value="SOL/USD">SOL/USD</option>
-                                <option value="XRP/USD">XRP/USD</option>
-                                <option value="ADA/USD">ADA/USD</option>
-                                <option value="DOGE/USD">DOGE/USD</option>
-                                <option value="RVN/USD">RVN/USD</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="alert-price">Target Price:</label>
-                            <input type="number" id="alert-price" step="0.01" placeholder="e.g., 30000.00" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="alert-direction">Alert When Price Is:</label>
-                            <select id="alert-direction" required>
-                                <option value="">Select direction</option>
-                                <option value="above">Above</option>
-                                <option value="below">Below</option>
-                            </select>
-                        </div>
-                        <button type="submit">Set Alert</button>
-                    </form>
-                </div>
-                <div class="current-alerts">
-                    <h3>Active Alerts</h3>
-                    <ul id="active-alerts-list">
-                        </ul>
-                </div>
+            <section class="trade-log-section" style="display: none;">
+                <h2>Trade Log</h2>
+                <input type="text" id="trade-coin" placeholder="Coin (e.g., BTC)">
+                <input type="number" id="trade-amount" placeholder="Amount">
+                <select id="trade-type">
+                    <option value="buy">Buy</option>
+                    <option value="sell">Sell</option>
+                </select>
+                <button id="log-trade-button">Log Trade</button>
+
+                <h3>Recent Trades</h3>
+                <div id="trade-summary-output" class="trade-summary-output">
+                    </div>
+
+                <h3>Full Trade History</h3>
+                <div id="trade-history-output" class="trade-history-output">
+                    </div>
             </section>
 
-            <section id="trade-statistics-section" class="content-section">
-                <h2>Trade Statistics</h2>
-                <div class="stats-overview">
-                    <p>Overall P/L: <span id="stats-total-profit-loss">$0.00</span></p>
-                    <p>Total Trades: <span id="stats-total-trades">0</span></p>
-                    <p>Win Rate: <span id="stats-win-rate">0.00%</span></p>
-                    <p>Average P/L per Trade: <span id="stats-avg-profit-per-trade">$0.00</span></p>
-                </div>
-                <div class="full-trade-history">
-                    <h3>Trade History</h3>
-                    <table id="trade-history-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Date</th>
-                                <th>Pair</th>
-                                <th>Type</th>
-                                <th>Entry Price</th>
-                                <th>Exit Price</th>
-                                <th>P/L</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="settings-section" class="content-section">
-                <h2>Settings</h2>
-                <p>Manage your application settings here.</p>
-                </section>
         </main>
     </div>
 
+    <footer>
+        <p>&copy; 2023 Aura. All rights reserved.</p>
+    </footer>
+
     <script>
-        const BACKEND_URL = 'https://aura-trading-bot-backend.onrender.com'; // Your Render backend URL
+        const API_BASE_URL = 'https://aura-trading-bot-backend.onrender.com'; // Your Render backend URL
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const navItems = document.querySelectorAll('.nav-menu li');
-            const contentSections = document.querySelectorAll('.content-section');
-
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    item.classList.add('active');
-
-                    const targetSection = item.dataset.section;
-                    contentSections.forEach(section => {
-                        if (section.id === `${targetSection}-section`) {
-                            section.classList.add('active');
-                        } else {
-                            section.classList.remove('active');
-                        }
-                    });
-                });
-            });
-
-            // Initial load of dashboard data
-            fetchMarketPrices();
-            fetchTradeSummary();
-            fetchRecentTrades();
-            // Start polling for market prices
-            // IMPORTANT CHANGE: Changed from 5000ms to 30000ms (30 seconds)
-            setInterval(fetchMarketPrices, 30000); 
-            setInterval(fetchTradeSummary, 60000); // Refresh trade summary every 1 minute
-            setInterval(fetchRecentTrades, 60000); // Refresh recent trades every 1 minute
-
-            // AI Chat Functionality
-            const chatInput = document.getElementById('chat-input');
-            const sendButton = document.getElementById('send-button');
-            const chatWindow = document.getElementById('chat-window');
-
-            sendButton.addEventListener('click', sendMessage);
-            chatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendMessage();
+        // --- Market Data Fetching ---
+        async function fetchMarketPrices() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/all_market_prices`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error fetching market prices:', response.status, errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            });
-
-            async function sendMessage() {
-                const message = chatInput.value.trim();
-                if (message === '') return;
-
-                appendMessage(message, 'user-message');
-                chatInput.value = '';
-
-                try {
-                    const response = await fetch(`${BACKEND_URL}/chat`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ message: message })
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        appendMessage(data.response, 'aura-message');
-                    } else {
-                        appendMessage(`Error: ${data.error || 'Could not get response from AI.'}`, 'aura-message error');
-                    }
-                } catch (error) {
-                    console.error('Error communicating with backend:', error);
-                    appendMessage('Error: Could not connect to the AI service.', 'aura-message error');
-                }
+                const data = await response.json();
+                document.getElementById('btc-price').textContent = `$${data.bitcoin.usd.toFixed(2)}`;
+                document.getElementById('eth-price').textContent = `$${data.ethereum.usd.toFixed(2)}`;
+                document.getElementById('xrp-price').textContent = `$${data.ripple.usd.toFixed(2)}`;
+                document.getElementById('sol-price').textContent = `$${data.solana.usd.toFixed(2)}`;
+            } catch (error) {
+                console.error('Failed to fetch market prices:', error);
+                document.getElementById('btc-price').textContent = 'Error';
+                document.getElementById('eth-price').textContent = 'Error';
+                document.getElementById('xrp-price').textContent = 'Error';
+                document.getElementById('sol-price').textContent = 'Error';
             }
+        }
 
-            function appendMessage(text, type) {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', type);
-                messageElement.innerHTML = `<p>${text}</p>`; // Use innerHTML to allow for basic formatting if AI sends markdown
-                chatWindow.appendChild(messageElement);
-                chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom
+        // Fetch prices immediately on load and then every 30 seconds
+        fetchMarketPrices();
+        setInterval(fetchMarketPrices, 30000); // Set to 30 seconds (30000 milliseconds)
+
+
+        // --- AI Chat Functionality ---
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const chatWindow = document.getElementById('chat-window');
+
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
             }
+        });
 
-            // Market Data Fetching
-            async function fetchMarketPrices() {
-                try {
-                    const response = await fetch(`${BACKEND_URL}/all_market_prices`);
-                    const data = await response.json();
-                    const marketDataDiv = document.getElementById('market-data');
-                    marketDataDiv.innerHTML = ''; // Clear previous data
+        async function sendMessage() {
+            const userMessageText = chatInput.value.trim();
+            if (userMessageText === '') return;
 
-                    if (Object.keys(data).length === 0) {
-                        marketDataDiv.innerHTML = '<p>Market data currently unavailable. Retrying...</p>';
-                    } else {
-                        for (const pair in data) {
-                            const priceInfo = data[pair];
-                            const priceElement = document.createElement('div');
-                            priceElement.classList.add('market-item');
-                            const changeClass = priceInfo.percent_change >= 0 ? 'positive' : 'negative';
-                            priceElement.innerHTML = `
-                                <span>${pair}:</span> 
-                                <span class="price">$${priceInfo.price.toFixed(2)}</span> 
-                                <span class="change ${changeClass}">(${priceInfo.percent_change.toFixed(2)}%)</span>
-                            `;
-                            marketDataDiv.appendChild(priceElement);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error fetching market prices:', error);
-                    document.getElementById('market-data').innerHTML = '<p>Error loading market data.</p>';
-                }
-            }
+            appendMessage(userMessageText, 'user-message');
+            chatInput.value = ''; // Clear input immediately
 
-            // Trade Summary Fetching
-            async function fetchTradeSummary() {
-                try {
-                    const response = await fetch(`${BACKEND_URL}/get_trade_summary`);
-                    const data = await response.json();
-
-                    document.getElementById('total-trades').textContent = data.total_trades;
-                    document.getElementById('total-profit-loss').textContent = `$${data.total_profit_loss.toFixed(2)}`;
-                    document.getElementById('win-rate').textContent = `${data.win_rate.toFixed(2)}%`;
-                    document.getElementById('avg-profit-per-trade').textContent = `$${data.average_profit_per_trade.toFixed(2)}`;
-
-                    // Also update trade statistics section
-                    document.getElementById('stats-total-trades').textContent = data.total_trades;
-                    document.getElementById('stats-total-profit-loss').textContent = `$${data.total_profit_loss.toFixed(2)}`;
-                    document.getElementById('stats-win-rate').textContent = `${data.win_rate.toFixed(2)}%`;
-                    document.getElementById('stats-avg-profit-per-trade').textContent = `$${data.average_profit_per_trade.toFixed(2)}`;
-
-                    updatePerformanceChart(data.total_profit_loss, data.total_trades - data.profitable_trades, data.profitable_trades);
-
-                } catch (error) {
-                    console.error('Error fetching trade summary:', error);
-                }
-            }
-
-            // Recent Trades Fetching
-            async function fetchRecentTrades() {
-                try {
-                    const response = await fetch(`${BACKEND_URL}/get_trades`);
-                    const trades = await response.json();
-                    const tableBody = document.getElementById('recent-trades-table').getElementsByTagName('tbody')[0];
-                    tableBody.innerHTML = ''; // Clear existing rows
-
-                    // Sort trades by timestamp descending and take the last 5
-                    const recentTrades = trades.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
-
-                    recentTrades.forEach(trade => {
-                        const row = tableBody.insertRow();
-                        const plClass = trade.profit_loss >= 0 ? 'positive' : 'negative';
-                        row.innerHTML = `
-                            <td>${trade.pair}</td>
-                            <td>${trade.trade_type}</td>
-                            <td>$${trade.entry_price.toFixed(2)}</td>
-                            <td>$${trade.exit_price.toFixed(2)}</td>
-                            <td class="${plClass}">$${trade.profit_loss.toFixed(2)}</td>
-                        `;
-                    });
-
-                    // Also populate the full trade history table
-                    populateFullTradeHistory(trades);
-
-                } catch (error) {
-                    console.error('Error fetching recent trades:', error);
-                }
-            }
-
-            // Function to populate full trade history table in Trade Statistics section
-            function populateFullTradeHistory(trades) {
-                const tableBody = document.getElementById('trade-history-table').getElementsByTagName('tbody')[0];
-                tableBody.innerHTML = ''; // Clear existing rows
-
-                trades.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(trade => {
-                    const row = tableBody.insertRow();
-                    const plClass = trade.profit_loss >= 0 ? 'positive' : 'negative';
-                    const tradeDate = new Date(trade.timestamp).toLocaleDateString('en-US');
-
-                    row.innerHTML = `
-                        <td>${trade.id}</td>
-                        <td>${tradeDate}</td>
-                        <td>${trade.pair}</td>
-                        <td>${trade.trade_type}</td>
-                        <td>$${trade.entry_price.toFixed(2)}</td>
-                        <td>$${trade.exit_price.toFixed(2)}</td>
-                        <td class="${plClass}">$${trade.profit_loss.toFixed(2)}</td>
-                    `;
-                });
-            }
-
-            // Chart.js for Performance Chart
-            let performanceChart;
-            function updatePerformanceChart(totalProfitLoss, totalLosses, totalWins) {
-                const ctx = document.getElementById('performanceChart').getContext('2d');
-                if (performanceChart) {
-                    performanceChart.destroy(); // Destroy existing chart if it exists
-                }
-
-                performanceChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Total Profit/Loss', 'Losses', 'Wins'], // You can adjust labels as needed
-                        datasets: [{
-                            data: [totalProfitLoss, Math.abs(totalLosses), totalWins], // Example data, adjust as per your stats
-                            backgroundColor: [
-                                '#4CAF50', // Green for profit
-                                '#F44336', // Red for loss
-                                '#2196F3'  // Blue for wins
-                            ],
-                            hoverOffset: 4
-                        }]
+            try {
+                const response = await fetch(`${API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            },
-                            title: {
-                                display: true,
-                                text: 'Overall Trading Performance'
-                            }
+                    body: JSON.stringify({ message: userMessageText })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(`Server responded with status ${response.status}: ${errorData.error || 'Unknown error'}`);
+                }
+
+                const data = await response.json();
+                appendMessage(data.response, 'aura-message');
+            } catch (error) {
+                console.error('Error sending message:', error);
+                appendMessage(`Error: ${error.message || 'Could not connect to Aura.'}`, 'aura-message error-message');
+            }
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to bottom
+        }
+
+        function appendMessage(text, className) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', className);
+            messageDiv.textContent = text;
+            chatWindow.appendChild(messageDiv);
+        }
+
+        // --- Tab Switching Logic (for Dashboard, AI Chat, Analysis, Trade Log) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-menu ul li a');
+            const sections = {
+                'Dashboard': document.querySelector('.dashboard-overview'),
+                'AI Chat': document.querySelector('.chat-section'),
+                'Analysis': document.querySelector('.analysis-section'),
+                'Price Alerts': null, // No specific section yet, can add later
+                'Trade Statistics': document.querySelector('.trade-log-section'), // Mapping to trade log for now
+                'Settings': null // No specific section yet
+            };
+
+            // Hide all sections initially except Dashboard (or default)
+            for (const key in sections) {
+                if (sections[key] && key !== 'Dashboard') { // Default to dashboard
+                    sections[key].style.display = 'none';
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default link behavior
+                    const linkText = this.textContent.trim();
+
+                    // Remove active class from all links
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    // Add active class to clicked link
+                    this.classList.add('active');
+
+                    // Hide all sections
+                    for (const key in sections) {
+                        if (sections[key]) {
+                            sections[key].style.display = 'none';
                         }
                     }
-                });
-            }
-            
-            // Analysis Form
-            const analysisForm = document.getElementById('analysis-form');
-            const aiAnalysisOutput = document.getElementById('ai-analysis-output');
-            const analysisText = document.getElementById('analysis-text');
-            const signalValue = document.getElementById('signal-value');
-            const confidenceValue = document.getElementById('confidence-value');
-            const entryValue = document.getElementById('entry-value');
-            const tp1Value = document.getElementById('tp1-value');
-            const tp2Value = document.getElementById('tp2-value');
-            const tp3Value = document.getElementById('tp3-value');
-            const slValue = document.getElementById('sl-value');
-            const rrRatioValue = document.getElementById('rr-ratio-value');
-            const leverageValue = document.getElementById('leverage-value');
-            const logTradeButton = document.getElementById('log-trade-button');
 
-            analysisForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const pair = document.getElementById('pair-select').value;
-                const timeframes = Array.from(document.querySelectorAll('#analysis-form input[type="checkbox"][id^="tf-"]:checked')).map(cb => cb.value);
-                const indicators = Array.from(document.querySelectorAll('#analysis-form input[type="checkbox"][id^="ind-"]:checked')).map(cb => cb.value);
-                const tradeType = document.getElementById('trade-type').value;
-                const balanceRange = document.getElementById('balance-range').value;
-                const leverage = document.getElementById('leverage').value;
-
-                // Fetch current price for the selected pair to provide context to backend for dummy analysis
-                let currentPriceForPair = 0;
-                const marketDataResponse = await fetch(`${BACKEND_URL}/all_market_prices`);
-                const marketData = await marketDataResponse.json();
-                if (marketData[pair]) {
-                    currentPriceForPair = marketData[pair].price;
-                }
-
-                try {
-                    const response = await fetch(`${BACKEND_URL}/generate_analysis`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            pair,
-                            timeframes,
-                            indicators,
-                            trade_type: tradeType,
-                            balance_range: balanceRange,
-                            leverage,
-                            current_price_for_pair: currentPriceForPair // Pass current price
-                        })
-                    });
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        analysisText.innerHTML = data.ai_analysis_text;
-                        signalValue.textContent = data.analysis_data.signal;
-                        confidenceValue.textContent = data.analysis_data.confidence;
-                        entryValue.textContent = `$${data.analysis_data.entry.toFixed(2)}`;
-                        tp1Value.textContent = `$${data.analysis_data.tp1.toFixed(2)}`;
-                        tp2Value.textContent = `$${data.analysis_data.tp2.toFixed(2)}`;
-                        tp3Value.textContent = `$${data.analysis_data.tp3.toFixed(2)}`;
-                        slValue.textContent = `$${data.analysis_data.sl.toFixed(2)}`;
-                        rrRatioValue.textContent = data.analysis_data.rr_ratio;
-                        leverageValue.textContent = data.analysis_data.leverage;
-
-                        aiAnalysisOutput.style.display = 'block';
-                        logTradeButton.style.display = 'block'; // Show log trade button after analysis
-
-                        // Store current analysis data temporarily for logging
-                        logTradeButton.dataset.analysisData = JSON.stringify({
-                            pair: pair,
-                            trade_type: tradeType,
-                            entry_price: data.analysis_data.entry,
-                            exit_price: data.analysis_data.tp1, // Use TP1 as a default for exit price
-                            profit_loss: data.analysis_data.tp1 - data.analysis_data.entry // Calculate P/L
-                        });
-
-                    } else {
-                        analysisText.textContent = `Error generating analysis: ${data.error || 'Unknown error'}`;
-                        aiAnalysisOutput.style.display = 'block';
-                        logTradeButton.style.display = 'none';
+                    // Show the relevant section
+                    if (sections[linkText]) {
+                        sections[linkText].style.display = 'block';
+                        // Special handling for chat window to scroll to bottom when shown
+                        if (linkText === 'AI Chat') {
+                            chatWindow.scrollTop = chatWindow.scrollHeight;
+                        }
+                    } else if (linkText === 'Price Alerts' || linkText === 'Settings') {
+                        // For sections not yet implemented, you might show a message or just keep it blank
+                        console.log(`${linkText} section clicked, but not implemented yet.`);
                     }
+                });
+            });
+        });
+
+
+        // --- Analysis Functionality ---
+        const generateAnalysisButton = document.getElementById('generate-analysis-button');
+        const analysisOutput = document.getElementById('analysis-output');
+
+        if (generateAnalysisButton) {
+            generateAnalysisButton.addEventListener('click', async () => {
+                analysisOutput.textContent = 'Generating analysis, please wait...';
+                try {
+                    const response = await fetch(`${API_BASE_URL}/generate_analysis`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('API Error:', errorData);
+                        throw new Error(`Server responded with status ${response.status}: ${errorData.error || 'Unknown error'}`);
+                    }
+                    const data = await response.json();
+                    analysisOutput.textContent = data.analysis;
                 } catch (error) {
-                    console.error('Error with analysis request:', error);
-                    analysisText.textContent = 'Error: Could not connect to the analysis service.';
-                    aiAnalysisOutput.style.display = 'block';
-                    logTradeButton.style.display = 'none';
+                    console.error('Error generating analysis:', error);
+                    analysisOutput.textContent = `Failed to generate analysis: ${error.message || 'Network error'}`;
                 }
             });
+        }
 
-            logTradeButton.addEventListener('click', async () => {
-                const analysisDataString = logTradeButton.dataset.analysisData;
-                if (!analysisDataString) {
-                    alert("No analysis data to log!");
+
+        // --- Trade Logging and Summary Functionality ---
+        const logTradeButton = document.getElementById('log-trade-button');
+        const tradeCoinInput = document.getElementById('trade-coin');
+        const tradeAmountInput = document.getElementById('trade-amount');
+        const tradeTypeSelect = document.getElementById('trade-type');
+        const tradeSummaryOutput = document.getElementById('trade-summary-output');
+        const tradeHistoryOutput = document.getElementById('trade-history-output');
+
+        if (logTradeButton) {
+            logTradeButton.addEventListener('click', logTrade);
+        }
+
+        async function logTrade() {
+            const coin = tradeCoinInput.value.trim().toUpperCase();
+            const amount = parseFloat(tradeAmountInput.value);
+            const type = tradeTypeSelect.value;
+
+            if (!coin || isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid coin and a positive amount.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/log_trade`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ coin, amount, type })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Failed to log trade: ${errorData.error || 'Unknown error'}`);
+                }
+
+                const data = await response.json();
+                alert(data.message);
+                tradeCoinInput.value = '';
+                tradeAmountInput.value = '';
+                fetchTradeSummary(); // Refresh summary after logging
+                fetchTradeHistory(); // Refresh history after logging
+
+            } catch (error) {
+                console.error('Error logging trade:', error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function fetchTradeSummary() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get_trade_summary`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Failed to fetch trade summary: ${errorData.error || 'Unknown error'}`);
+                }
+                const data = await response.json();
+                tradeSummaryOutput.innerHTML = ''; // Clear previous summary
+
+                if (Object.keys(data).length === 0) {
+                    tradeSummaryOutput.textContent = 'No trades logged yet.';
                     return;
                 }
-                const analysisData = JSON.parse(analysisDataString);
 
-                // Simple profit/loss calculation for logging
-                const profitLoss = analysisData.exit_price - analysisData.entry_price;
-
-                try {
-                    const response = await fetch(`${BACKEND_URL}/log_trade`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            pair: analysisData.pair,
-                            trade_type: analysisData.trade_type,
-                            entry_price: analysisData.entry_price,
-                            exit_price: analysisData.exit_price,
-                            profit_loss: profitLoss
-                        })
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        alert(data.message);
-                        fetchTradeSummary(); // Refresh summary and recent trades after logging
-                        fetchRecentTrades();
-                    } else {
-                        alert(`Error logging trade: ${data.error || 'Unknown error'}`);
-                    }
-                } catch (error) {
-                    console.error('Error logging trade:', error);
-                    alert('Error: Could not connect to the trade logging service.');
+                for (const coin in data) {
+                    const summaryItem = document.createElement('p');
+                    summaryItem.textContent = `${coin}: Buys - ${data[coin].buy || 0}, Sells - ${data[coin].sell || 0}, Net - ${data[coin].net.toFixed(2)}`;
+                    tradeSummaryOutput.appendChild(summaryItem);
                 }
-            });
-
-            // Price Alert Functionality
-            const alertForm = document.getElementById('alert-form');
-            const activeAlertsList = document.getElementById('active-alerts-list');
-            let activeAlerts = []; // Store alerts in memory for now
-
-            alertForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const pair = document.getElementById('alert-pair').value;
-                const price = parseFloat(document.getElementById('alert-price').value);
-                const direction = document.getElementById('alert-direction').value;
-
-                if (pair && !isNaN(price) && direction) {
-                    const newAlert = { id: Date.now(), pair, price, direction, active: true };
-                    activeAlerts.push(newAlert);
-                    renderAlerts();
-                    alertForm.reset();
-                    alert(`Alert set for ${pair} when price is ${direction} ${price}!`);
-                } else {
-                    alert('Please fill in all alert details.');
-                }
-            });
-
-            function renderAlerts() {
-                activeAlertsList.innerHTML = '';
-                activeAlerts.forEach(alert => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${alert.pair}: ${alert.direction} $${alert.price.toFixed(2)}`;
-                    activeAlertsList.appendChild(listItem);
-                });
+            } catch (error) {
+                console.error('Error fetching trade summary:', error);
+                tradeSummaryOutput.textContent = `Failed to load trade summary: ${error.message}`;
             }
+        }
 
-            // Simple alert checking (for demonstration, in real app this would be backend logic)
-            // setInterval(checkAlerts, 10000); // Check alerts every 10 seconds
+        async function fetchTradeHistory() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get_trades`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Failed to fetch trade history: ${errorData.error || 'Unknown error'}`);
+                }
+                const data = await response.json();
+                tradeHistoryOutput.innerHTML = ''; // Clear previous history
 
-            // async function checkAlerts() {
-            //     const marketData = await fetchMarketPrices(); // Reuse existing fetch
-            //     if (Object.keys(marketData).length === 0) return; // No data to check against
+                if (data.length === 0) {
+                    tradeHistoryOutput.textContent = 'No trade history available.';
+                    return;
+                }
 
-            //     activeAlerts.forEach(alert => {
-            //         if (alert.active && marketData[alert.pair]) {
-            //             const currentPrice = marketData[alert.pair].price;
-            //             let triggered = false;
-            //             if (alert.direction === 'above' && currentPrice > alert.price) {
-            //                 triggered = true;
-            //             } else if (alert.direction === 'below' && currentPrice < alert.price) {
-            //                 triggered = true;
-            //             }
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Coin</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                `;
+                const tbody = table.querySelector('tbody');
 
-            //             if (triggered) {
-            //                 alert(`ALERT! ${alert.pair} is now ${alert.direction} $${alert.price.toFixed(2)}! Current price: $${currentPrice.toFixed(2)}`);
-            //                 alert.active = false; // Deactivate alert after triggering
-            //                 renderAlerts(); // Re-render to show it's no longer active
-            //             }
-            //         }
-            //     });
-            // }
+                data.forEach(trade => {
+                    const row = tbody.insertRow();
+                    row.insertCell().textContent = new Date(trade.timestamp * 1000).toLocaleString();
+                    row.insertCell().textContent = trade.coin;
+                    row.insertCell().textContent = trade.amount.toFixed(2);
+                    row.insertCell().textContent = trade.type;
+                });
+                tradeHistoryOutput.appendChild(table);
 
-        });
+            } catch (error) {
+                console.error('Error fetching trade history:', error);
+                tradeHistoryOutput.textContent = `Failed to load trade history: ${error.message}`;
+            }
+        }
+
+
+        // Initial fetch of trade summary and history when page loads (if section visible)
+        // This will be called when Trade Statistics tab is clicked via DOMContentLoaded listener
     </script>
 </body>
 </html>
